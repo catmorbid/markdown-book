@@ -110,9 +110,9 @@ def main():
     if args.root_path[-1] != '/' or args.root_path[-1] != '\\':
         args.root_path = args.root_path + '/'
 
-    if (args.convert_to = 'html')
+    if args.convert_to == 'html':
         default_pandoc_cmd = 'pandoc --pdf-engine=xelatex --toc -o' + args.root_path + 'book.pdf title.txt '
-    else if (args.convert_to = 'icml')
+    elif args.convert_to == 'icml':
         default_pandoc_cmd = 'pandoc -s -f markdown -t icml -o' + args.root_path + 'book.icml title.txt '
     files_string = " ".join(file_list)
     run_cmd(default_pandoc_cmd + files_string)
