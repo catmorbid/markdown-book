@@ -91,6 +91,7 @@ def main():
                         help='Are you using folders for chapters?', default=False, action='store_true')
     parser.add_argument('-f', '--file-extension', default='md')
     parser.add_argument('-r', '--recursive', default=False, action='store_true')
+    parser.add_argument('-t', '--convert-to', default='pdf')
     args = parser.parse_args()
 
     if args.recursive:
@@ -109,7 +110,10 @@ def main():
     if args.root_path[-1] != '/' or args.root_path[-1] != '\\':
         args.root_path = args.root_path + '/'
 
-    default_pandoc_cmd = 'pandoc --pdf-engine=xelatex --toc -o' + args.root_path + 'book.pdf title.txt '
+    if (args.convert_to = 'html')
+        default_pandoc_cmd = 'pandoc --pdf-engine=xelatex --toc -o' + args.root_path + 'book.pdf title.txt '
+    else if (args.convert_to = 'icml')
+        default_pandoc_cmd = 'pandoc -s -f markdown -t icml -o' + args.root_path + 'book.icml title.txt '
     files_string = " ".join(file_list)
     run_cmd(default_pandoc_cmd + files_string)
 
