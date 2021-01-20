@@ -22,7 +22,15 @@ def run_cmd(cmd):
 def sort_list(a_list):
     list_with_indeces = []
     for item in a_list:
-        index = re.sub("[^0-9]", "", item)
+        #index = re.sub("[^0-9]", "", item)
+        result = re.findall(r'\d+', item)
+        if result:
+            index = int(result[0])
+        else:
+            index = 999
+
+        print(result, item, index)
+
         list_with_indeces.append([item, index])
     list_with_indeces.sort(key=lambda x: x[1])  # sort by index
 
@@ -91,7 +99,8 @@ def main():
                         help='Are you using folders for chapters?', default=False, action='store_true')
     parser.add_argument('-f', '--file-extension', default='md')
     parser.add_argument('-r', '--recursive', default=False, action='store_true')
-    parser.add_argument('-t', '--convert-to', default='pdf')
+    parser.add_argument('-t', '--convert-to', default='pdf', help='supported: pdf, icml')
+    parser.add_argument('-o', '--output', help='output file and path')
     args = parser.parse_args()
 
     if args.recursive:
@@ -110,10 +119,13 @@ def main():
     if args.root_path[-1] != '/' or args.root_path[-1] != '\\':
         args.root_path = args.root_path + '/'
 
+    if not args.output:
+        args.output = args.root_path + 'book.' + args.convert_to
+
     if args.convert_to == 'html':
-        default_pandoc_cmd = 'pandoc --pdf-engine=xelatex --toc -o' + args.root_path + 'book.pdf title.txt '
+        default_pandoc_cmd = 'pandoc --pdf-engine=xelatex --toc -o ' + args.output + ' '+args.root_path+'title.txt '
     elif args.convert_to == 'icml':
-        default_pandoc_cmd = 'pandoc -s -f markdown -t icml -o' + args.root_path + 'book.icml title.txt '
+        default_pandoc_cmd = 'pandoc -s -f markdown -t icml -o ' + args.output + ' '+args.root_path+'title.txt '
     files_string = " ".join(file_list)
     run_cmd(default_pandoc_cmd + files_string)
 
