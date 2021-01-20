@@ -42,7 +42,7 @@ def get_list_of_files(path, extension, chapter_folders=False):
 
         for chapter in chapters_list:
             chapter_markdown_files = []
-            all_files = os.listdir(path + "/" + chapter)
+            all_files = os.listdir(path + chapter)
             for a_file in all_files:
                 if a_file.endswith("." + extension):
                     # path + "/" + chapter + "/" + 
@@ -61,9 +61,10 @@ def get_list_of_files(path, extension, chapter_folders=False):
         sorted_markdown_list = sort_list(sorted_markdown_list)
         for index in range(len(sorted_markdown_list)):
             current_path = sorted_markdown_list[index]
-            sorted_markdown_list[index] = path + "/" + current_path
+            sorted_markdown_list[index] = path + current_path
 
     return sorted_markdown_list
+
 
 # get all files from root path recursively, by looking at each sub-directory.
 def get_list_of_files_recursively(path, extension):
@@ -74,7 +75,7 @@ def get_list_of_files_recursively(path, extension):
         if os.path.isdir(item_path):
             sorted_markdown_list.extend(get_list_of_files_recursively(item_path, extension))
         else:
-            if item.endswith("."+extension):
+            if item.endswith("." + extension):
                 sorted_markdown_list.append(item_path)
 
     return sorted_markdown_list
@@ -87,16 +88,26 @@ def export_dir_to_format(path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--root-path', help='Root path for book files', required=True)
-    parser.add_argument('-c', '--using-chapter-folders',
+    parser.add_argument('-f', '--using-chapter-folders',
                         help='Are you using folders for chapters?', default=False, action='store_true')
-    parser.add_argument('-f', '--file-extension', default='md')
-    parser.add_argument('-r', '--recursive', default=False, action='store_true')
+    parser.add_argument('-F', '--file-extension', default='md')
+    parser.add_argument('-r', '--recursive', default=False, action='store_true',
+                        help="Add all valid files within subfolders recursively")
+    parser.add_argument('-o', '--output', default=False,
+                        help="Set desired output file and folder. Defaults to root path.")
+    parser.add_argument('-c', '--css', default=False, help="Specify a .css file for pandoc.")
     args = parser.parse_args()
+
+    if args.root_path[-1] != '/' or args.root_path[-1] != '\\':
+        args.root_path = os.path.join(args.root_path, '')
 
     if args.recursive:
         file_list = get_list_of_files_recursively(args.root_path, args.file_extension)
     else:
         file_list = get_list_of_files(args.root_path, args.file_extension, args.using_chapter_folders)
+
+    title_path = args.root_path + 'title.txt'
+    file_list.insert(0, title_path)
 
     if not file_list:
         print("No markdown files found, if you\'re using folder chapters use -c, else do not use -c")
@@ -106,11 +117,30 @@ def main():
     for file in file_list:
         print(file)
 
-    if args.root_path[-1] != '/' or args.root_path[-1] != '\\':
-        args.root_path = args.root_path + '/'
+    if not args.output:
+        output_path = args.root_path + "book.pdf"
+    else:
+        output_path = args.output
 
-    default_pandoc_cmd = 'pandoc --pdf-engine=xelatex --toc -o' + args.root_path + 'book.pdf title.txt '
+    if not args.css:
+        args_css = ''
+    else:
+        args_css = '-c ' + args.css
+
+    # default_pandoc_cmd = 'pandoc --pdf-engine=xelatex --toc -o' + args.root_path + 'book.pdf title.txt '
+    default_pandoc_cmd = 'pandoc' \
+                         + ' -f markdown ' \
+                         + ' -V geometry:a4paper' \
+                         + ' -V geometry:margin=2cm' \
+                         + ' '+args_css \
+                         + ' -s ' \
+                         + ' -t html -o ' \
+                         + output_path + ' '
+
+
+
     files_string = " ".join(file_list)
+    print("running pandoc cmd: " + default_pandoc_cmd + files_string)
     run_cmd(default_pandoc_cmd + files_string)
 
 
