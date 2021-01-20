@@ -1,35 +1,18 @@
 import os, sys, re
 import argparse
 import subprocess
-
-
-# return output from bash pipe cmd as decoded string
-def run_cmd(cmd):
-    bash_cmd = cmd
-    process = subprocess.Popen(bash_cmd.split(), stdout=subprocess.PIPE)
-    output = process.stdout.read()
-    return output.decode('utf-8')
-
-
-# def get_list_of_files(path, extension):
-#     list_of_files = []
-#     for root, dirs, files in os.walk(path):
-#         for file in files:
-#             if file.endswith("." + extension):
-#                 list_of_files.append(os.path.join(root, file))
-#     return list_of_files
+import shlex
 
 def sort_list(a_list):
     list_with_indeces = []
     for item in a_list:
-        #index = re.sub("[^0-9]", "", item)
         result = re.findall(r'\d+', item)
         if result:
             index = int(result[0])
         else:
             index = 999
 
-        print(result, item, index)
+        # print(result, item, index)
 
         list_with_indeces.append([item, index])
     list_with_indeces.sort(key=lambda x: x[1])  # sort by index
@@ -73,6 +56,7 @@ def get_list_of_files(path, extension, chapter_folders=False):
 
     return sorted_markdown_list
 
+
 # get all files from root path recursively, by looking at each sub-directory.
 def get_list_of_files_recursively(path, extension):
     sorted_markdown_list = []
@@ -82,7 +66,7 @@ def get_list_of_files_recursively(path, extension):
         if os.path.isdir(item_path):
             sorted_markdown_list.extend(get_list_of_files_recursively(item_path, extension))
         else:
-            if item.endswith("."+extension):
+            if item.endswith("." + extension):
                 sorted_markdown_list.append(item_path)
 
     return sorted_markdown_list
@@ -95,18 +79,20 @@ def export_dir_to_format(path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--root-path', help='Root path for book files', required=True)
-    parser.add_argument('-c', '--using-chapter-folders',
-                        help='Are you using folders for chapters?', default=False, action='store_true')
+    # parser.add_argument('-c', '--using-chapter-folders',
+    #                     help='Are you using folders for chapters?', default=False, action='store_true')
     parser.add_argument('-f', '--file-extension', default='md')
-    parser.add_argument('-r', '--recursive', default=False, action='store_true')
+    # parser.add_argument('-r', '--recursive', default=True, action='store_true')
     parser.add_argument('-t', '--convert-to', default='pdf', help='supported: pdf, icml')
     parser.add_argument('-o', '--output', help='output file and path')
     args = parser.parse_args()
 
-    if args.recursive:
-        file_list = get_list_of_files_recursively(args.root_path, args.file_extension)
-    else:
-        file_list = get_list_of_files(args.root_path, args.file_extension, args.using_chapter_folders)
+    # if args.recursive:
+    #     file_list = get_list_of_files_recursively(args.root_path, args.file_extension)
+    # else:
+    #     file_list = get_list_of_files(args.root_path, args.file_extension, args.using_chapter_folders)
+
+    file_list = get_list_of_files_recursively(args.root_path, args.file_extension)
 
     if not file_list:
         print("No markdown files found, if you\'re using folder chapters use -c, else do not use -c")
@@ -122,12 +108,48 @@ def main():
     if not args.output:
         args.output = args.root_path + 'book.' + args.convert_to
 
-    if args.convert_to == 'html':
-        default_pandoc_cmd = 'pandoc --pdf-engine=xelatex --toc -o ' + args.output + ' '+args.root_path+'title.txt '
+    # if args.convert_to == 'pdf':
+    #     default_pandoc_cmd = "pandoc --pdf-engine=xelatex --toc " \
+    #                          "-V colorlinks " \
+    #                          "-V urlcolor=NavyBlue " \
+    #                          "-V geometry:\"top=2cm, bottom=1.5cm, left=2cm, right=2cm\" "\
+    #                          "-t pdf " \
+    #                          "-o "+ args.output + " " + args.root_path + "title.txt "
+    # elif args.convert_to == 'icml':
+    #     default_pandoc_cmd = "pandoc -s -f markdown -t icml -o " + args.output + " " + args.root_path + "title.txt "
+
+    if args.convert_to == 'pdf':
+        proc_args = ["pandoc",
+                     "--standalone",
+                     "--pdf-engine=xelatex",
+                     "--toc",
+                     "--data-dir=pandoc_data",
+                     "--template=eisvogel",
+                     "-V table-use-row-colors",
+                     "-V book",
+                     "--top-level-division=chapter",
+                     "-V classoption=oneside",
+                     # "-V colorlinks",
+                     # "-V urlcolor=NavyBlue",
+                     "-V geometry:\"top=3cm, bottom=3cm, left=1cm, right=1cm\"",
+                     # "-V mainfont:\"Calibri\"",
+                     "-t pdf",
+                     "-o " + args.output,
+                     ]
     elif args.convert_to == 'icml':
-        default_pandoc_cmd = 'pandoc -s -f markdown -t icml -o ' + args.output + ' '+args.root_path+'title.txt '
-    files_string = " ".join(file_list)
-    run_cmd(default_pandoc_cmd + files_string)
+        proc_args = ["pandoc",
+                     "--standalone",
+                     "-f markdown",
+                     "-t icml",
+                     "-o " + args.output,
+                     ]
+
+
+    proc_args.extend(file_list)
+
+    print (" ".join(proc_args))
+    subprocess.run(" ".join(proc_args))
+
 
 
 if __name__ == "__main__":
