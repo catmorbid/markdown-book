@@ -56,7 +56,6 @@ def get_list_of_files(path, extension, chapter_folders=False):
 
     return sorted_markdown_list
 
-
 # get all files from root path recursively, by looking at each sub-directory.
 def get_list_of_files_recursively(path, extension):
     sorted_markdown_list = []
@@ -79,12 +78,11 @@ def export_dir_to_format(path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--root-path', help='Root path for book files', required=True)
-    # parser.add_argument('-c', '--using-chapter-folders',
-    #                     help='Are you using folders for chapters?', default=False, action='store_true')
     parser.add_argument('-f', '--file-extension', default='md')
-    # parser.add_argument('-r', '--recursive', default=True, action='store_true')
-    parser.add_argument('-t', '--convert-to', default='pdf', help='supported: pdf, icml')
-    parser.add_argument('-o', '--output', help='output file and path')
+    parser.add_argument('-t', '--convert-to', default='pdf', help='supported: pdf, icml, html')
+    parser.add_argument('-o', '--output', default=False,
+                        help="Set desired output file and folder. Defaults to root path.")
+    parser.add_argument('-c', '--css', default=False, help="Specify a .css file for pandoc.")
     args = parser.parse_args()
 
     # if args.recursive:
