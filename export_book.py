@@ -85,11 +85,6 @@ def main():
     parser.add_argument('-c', '--css', default=False, help="Specify a .css file for pandoc.")
     args = parser.parse_args()
 
-    # if args.recursive:
-    #     file_list = get_list_of_files_recursively(args.root_path, args.file_extension)
-    # else:
-    #     file_list = get_list_of_files(args.root_path, args.file_extension, args.using_chapter_folders)
-
     file_list = get_list_of_files_recursively(args.root_path, args.file_extension)
 
     if not file_list:
@@ -106,15 +101,10 @@ def main():
     if not args.output:
         args.output = args.root_path + 'book.' + args.convert_to
 
-    # if args.convert_to == 'pdf':
-    #     default_pandoc_cmd = "pandoc --pdf-engine=xelatex --toc " \
-    #                          "-V colorlinks " \
-    #                          "-V urlcolor=NavyBlue " \
-    #                          "-V geometry:\"top=2cm, bottom=1.5cm, left=2cm, right=2cm\" "\
-    #                          "-t pdf " \
-    #                          "-o "+ args.output + " " + args.root_path + "title.txt "
-    # elif args.convert_to == 'icml':
-    #     default_pandoc_cmd = "pandoc -s -f markdown -t icml -o " + args.output + " " + args.root_path + "title.txt "
+    if not args.css:
+        args_css = ''
+    else:
+        args_css = '-c ' + args.css
 
     if args.convert_to == 'pdf':
         proc_args = ["pandoc",
@@ -141,6 +131,15 @@ def main():
                      "-f markdown",
                      "-t icml",
                      "-o " + args.output,
+                     ]
+    elif args.convert_to == 'html':
+        proc_args = ["pandoc",
+                     "--standalone",
+                     "-f markdown",
+                     "-V geometry:a4paper",
+                     "-V geometry:margin=2cm",
+                     args_css,
+                     "-o " + args.output
                      ]
 
 
