@@ -2,6 +2,7 @@ import os, sys, re
 import argparse
 import subprocess
 import shlex
+import fileinput
 
 def sort_list(a_list):
     list_with_indeces = []
@@ -141,6 +142,9 @@ def main():
                      args_css,
                      "-o " + args.output
                      ]
+    elif args.convert_to == 'markdown':
+        combineFiles(file_list, args.output)
+        return
 
 
     proc_args.extend(file_list)
@@ -148,7 +152,12 @@ def main():
     print (" ".join(proc_args))
     subprocess.run(" ".join(proc_args))
 
-
+def combineFiles(files_list, output):
+    with open(output, 'w', encoding='utf-8') as file:
+        input_lines = fileinput.input(files_list, openhook=fileinput.hook_encoded("utf-8"))
+        print ("combine / files read")
+        file.writelines(input_lines)
+        print("Files Combined to "+output)
 
 if __name__ == "__main__":
     main()
