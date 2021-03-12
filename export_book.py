@@ -4,18 +4,20 @@ import subprocess
 import shlex
 import fileinput
 
-def sort_list(a_list):
+def sort_list(a_list, require_index=False):
     list_with_indeces = []
     for item in a_list:
         result = re.findall(r'\d+', item)
         if result:
             index = int(result[0])
         else:
-            index = 999
-
+            if (require_index):
+                continue
+            else:
+                index = 999
         # print(result, item, index)
-
         list_with_indeces.append([item, index])
+
     list_with_indeces.sort(key=lambda x: x[1])  # sort by index
 
     sorted_list = []
@@ -58,9 +60,9 @@ def get_list_of_files(path, extension, chapter_folders=False):
     return sorted_markdown_list
 
 # get all files from root path recursively, by looking at each sub-directory.
-def get_list_of_files_recursively(path, extension):
+def get_list_of_files_recursively(path, extension, require_numbered=False):
     sorted_markdown_list = []
-    sorted_items = sort_list(os.listdir(path))
+    sorted_items = sort_list(os.listdir(path), require_numbered)
     for item in sorted_items:
         item_path = os.path.join(path, item)
         if os.path.isdir(item_path):
@@ -84,9 +86,10 @@ def main():
     parser.add_argument('-o', '--output', default=False,
                         help="Set desired output file and folder. Defaults to root path.")
     parser.add_argument('-c', '--css', default=False, help="Specify a .css file for pandoc.")
+    parser.add_argument('--require-numbered', default=False, action='store_true')
     args = parser.parse_args()
 
-    file_list = get_list_of_files_recursively(args.root_path, args.file_extension)
+    file_list = get_list_of_files_recursively(args.root_path, args.file_extension,args.require_numbered)
 
     if not file_list:
         print("No markdown files found, if you\'re using folder chapters use -c, else do not use -c")
@@ -119,10 +122,7 @@ def main():
                      "-V fontsize:10",
                      "--top-level-division=chapter",
                      "-V classoption=oneside",
-                     # "-V colorlinks",
-                     # "-V urlcolor=NavyBlue",
                      "-V geometry:\"top=3cm, bottom=3cm, left=1cm, right=1cm\"",
-                      "-V mainfont:\"Palatino Linotype\"",
                      "-t pdf",
                      "-o " + args.output,
                      ]
